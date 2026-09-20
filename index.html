@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6c63ff">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Meu Dia — Organizador</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#252735;--muted:#777b8c;--primary:#6c63ff;--primary2:#5148e8;--green:#22a06b;--line:#e8e9f0;--danger:#d94b5b;--shadow:0 10px 30px rgba(35,38,60,.08)}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+.app{max-width:900px;margin:auto;padding:22px 16px 90px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.brand h1{margin:0;font-size:27px}.brand p{margin:5px 0 0;color:var(--muted);font-size:14px}
+button{border:0;border-radius:12px;padding:11px 15px;font-weight:700;cursor:pointer}
+.primary{background:var(--primary);color:#fff}.primary:hover{background:var(--primary2)}
+.datebar{display:flex;align-items:center;justify-content:space-between;background:var(--card);padding:15px;border-radius:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.datebar button{background:#f0f0ff;color:var(--primary);padding:9px 12px}.date-title{text-align:center}.date-title strong{display:block;font-size:18px}.date-title span{font-size:13px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}.stat b{font-size:23px;display:block}.stat span{font-size:12px;color:var(--muted)}
+.card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}.card h2{font-size:17px;margin:0 0 14px}
+.task{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.task:last-child{border-bottom:0}
+.check{width:24px;height:24px;border:2px solid #c9cbd7;border-radius:8px;background:#fff;display:grid;place-items:center;padding:0;flex:none}.check.done{background:var(--green);border-color:var(--green);color:#fff}
+.task-main{flex:1;min-width:0}.task-name{font-size:15px;font-weight:700;word-break:break-word}.done-text{text-decoration:line-through;color:#999}
+.meta{display:flex;gap:8px;margin-top:5px;flex-wrap:wrap}.tag{font-size:11px;color:var(--muted);background:#f4f4f8;border-radius:20px;padding:4px 7px}.tag.priority{color:#9a5b00;background:#fff2d8}
+.delete{background:transparent;color:#aaa;padding:6px}.delete:hover{color:var(--danger)}
+.empty{text-align:center;padding:22px;color:var(--muted);font-size:14px}
+.done-section .task{opacity:.9}
+.add-form{display:grid;grid-template-columns:1fr 130px 130px auto;gap:9px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);outline:none}
+input:focus,select:focus{border-color:var(--primary)}
+.history-list{display:flex;gap:8px;flex-wrap:wrap}.history-list button{background:#f3f3f8;color:#555}
+.modal{display:none;position:fixed;inset:0;background:rgba(20,22,35,.45);padding:20px;z-index:10;align-items:center;justify-content:center}.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:20px;width:min(430px,100%)}.modal-box h3{margin-top:0}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+
+.calendar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.calendar-head strong{font-size:17px}.calendar-head button{background:#f0f0ff;color:var(--primary);padding:8px 11px}
+.weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.weekday{text-align:center;color:var(--muted);font-size:11px;padding:5px 0}.cal-day{min-height:65px;border:1px solid var(--line);border-radius:11px;background:#fff;padding:7px;cursor:pointer;position:relative}.cal-day:hover{border-color:var(--primary)}.cal-day.muted{opacity:.38}.cal-day.today{border:2px solid var(--primary)}.cal-day.selected{background:#f1f0ff}.cal-num{font-weight:700;font-size:13px}.cal-dots{display:flex;gap:3px;margin-top:8px;flex-wrap:wrap}.dot{width:6px;height:6px;border-radius:50%;background:var(--primary)}.dot.done{background:var(--green)}.dot.pending{background:#e5a83b}
+.observation{margin-top:8px;padding:9px 10px;background:#f7f7fb;border-left:3px solid var(--primary);border-radius:8px;color:#666;font-size:12px;line-height:1.4}
+.modal-box textarea{width:100%;min-height:105px;padding:12px;border:1px solid var(--line);border-radius:11px;resize:vertical;font-family:inherit;margin-top:9px;outline:none}.modal-box textarea:focus{border-color:var(--primary)}
+@media(max-width:650px){.app{padding:16px 12px 80px}.stats{gap:7px}.stat{padding:11px}.stat b{font-size:20px}.add-form{grid-template-columns:1fr 1fr}.add-form input{grid-column:1/-1}.add-form button{grid-column:1/-1}.datebar{padding:11px}.brand h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand"><h1>☀️ Meu Dia</h1><p>Organize suas tarefas sem deixar nada para trás.</p></div>
+  <button class="primary" onclick="openAdd()">＋ Tarefa</button>
+</header>
+
+<div class="datebar">
+  <button onclick="changeDay(-1)">‹</button>
+  <div class="date-title"><strong id="dateLabel"></strong><span id="dateSub"></span></div>
+  <button onclick="changeDay(1)">›</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><b id="pendingCount">0</b><span>Pendentes</span></div>
+  <div class="stat"><b id="doneCount">0</b><span>Realizadas</span></div>
+  <div class="stat"><b id="totalCount">0</b><span>Total do dia</span></div>
+</div>
+
+<div class="card">
+  <h2>📋 Tarefas do dia</h2>
+  <div id="pendingList"></div>
+</div>
+
+<div class="card done-section">
+  <h2>✅ Tarefas realizadas</h2>
+  <div id="doneList"></div>
+</div>
+
+<div class="card">
+  <div class="calendar-head">
+    <button onclick="changeMonth(-1)">‹</button>
+    <strong id="calendarTitle"></strong>
+    <button onclick="changeMonth(1)">›</button>
+  </div>
+  <div class="weekdays"><div class="weekday">DOM</div><div class="weekday">SEG</div><div class="weekday">TER</div><div class="weekday">QUA</div><div class="weekday">QUI</div><div class="weekday">SEX</div><div class="weekday">SÁB</div></div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+</div>
+
+<div class="card">
+  <h2>📅 Histórico</h2>
+  <div class="history-list" id="historyList"></div>
+</div>
+</div>
+
+<div class="modal" id="modal">
+ <div class="modal-box">
+  <h3 id="modalTitle">Nova tarefa</h3>
+  <input id="taskInput" placeholder="Ex.: Pagar conta de luz" maxlength="120">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px">
+   <input id="timeInput" type="time">
+   <select id="priorityInput"><option value="">Sem prioridade</option><option>Alta</option><option>Média</option><option>Baixa</option></select>
+  </div>
+  <div class="modal-actions"><button onclick="closeAdd()">Cancelar</button><button class="primary" onclick="addTask()">Adicionar</button></div>
+ </div>
+</div>
+
+<div class="modal" id="completeModal">
+ <div class="modal-box">
+  <h3>Concluir tarefa</h3>
+  <div id="completeTaskName" style="font-weight:700;margin-bottom:3px"></div>
+  <p style="font-size:13px;color:var(--muted);margin:4px 0">Quer registrar alguma observação sobre a execução?</p>
+  <textarea id="observationInput" placeholder="Ex.: Resolvido, pagamento feito, ficou pendente a parte X..."></textarea>
+  <div class="modal-actions"><button onclick="closeComplete()">Cancelar</button><button class="primary" onclick="confirmComplete()">Concluir tarefa</button></div>
+ </div>
+</div>
+
+<script>
+const KEY='meu-dia-organizador-v1';
+let data=JSON.parse(localStorage.getItem(KEY)||'{"tasks":[]}');
+let selectedDate=localDateKey(new Date());
+let calendarDate=parseDate(selectedDate);
+let completingId=null;
+
+function localDateKey(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+function parseDate(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function migrateOverdue(){
+  const today=localDateKey(new Date());
+  let changed=false;
+  data.tasks.forEach(t=>{
+    if(!t.done && t.date<today){t.date=today;t.carried=true;changed=true}
+  });
+  if(changed)save();
+}
+function fmtDate(s){
+ const d=parseDate(s);
+ return d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+}
+function shortDate(s){return parseDate(s).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+function changeDay(n){const d=parseDate(selectedDate);d.setDate(d.getDate()+n);selectedDate=localDateKey(d);render()}
+function render(){
+ migrateOverdue();
+ document.getElementById('dateLabel').textContent=fmtDate(selectedDate);
+ document.getElementById('dateSub').textContent=selectedDate===localDateKey(new Date())?'Hoje':'';
+ const tasks=data.tasks.filter(t=>t.date===selectedDate);
+ const pending=tasks.filter(t=>!t.done), done=tasks.filter(t=>t.done);
+ document.getElementById('pendingCount').textContent=pending.length;
+ document.getElementById('doneCount').textContent=done.length;
+ document.getElementById('totalCount').textContent=tasks.length;
+ renderList('pendingList',pending,false);
+ renderList('doneList',done,true);
+ renderHistory();
+ renderCalendar();
+}
+function renderList(id,tasks,isDone){
+ const el=document.getElementById(id);
+ if(!tasks.length){el.innerHTML='<div class="empty">'+(isDone?'Nenhuma tarefa concluída ainda.':'Tudo certo! Nenhuma tarefa pendente. 🎉')+'</div>';return}
+ tasks.sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+ el.innerHTML=tasks.map(t=>`
+ <div class="task">
+  <button class="check ${t.done?'done':''}" onclick="toggle('${t.id}')">${t.done?'✓':''}</button>
+  <div class="task-main">
+   <div class="task-name ${t.done?'done-text':''}">${esc(t.name)}</div>
+   <div class="meta">
+    ${t.time?`<span class="tag">⏰ ${t.time}</span>`:''}
+    ${t.priority?`<span class="tag priority">★ ${t.priority}</span>`:''}
+    ${t.carried?'<span class="tag">↪ veio do dia anterior</span>':''}
+    ${t.doneAt?`<span class="tag">✓ ${t.doneAt}</span>`:''}
+   </div>
+   ${t.observation?`<div class="observation">📝 ${esc(t.observation)}</div>`:''}
+  </div>
+  <button class="delete" title="Excluir" onclick="removeTask('${t.id}')">✕</button>
+ </div>`).join('');
+}
+
+function changeMonth(n){calendarDate.setMonth(calendarDate.getMonth()+n);renderCalendar()}
+function renderCalendar(){
+ const y=calendarDate.getFullYear(), m=calendarDate.getMonth();
+ document.getElementById('calendarTitle').textContent=new Date(y,m,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+ const first=new Date(y,m,1), start=first.getDay();
+ const days=new Date(y,m+1,0).getDate(), prevDays=new Date(y,m,0).getDate();
+ let cells='';
+ for(let i=0;i<42;i++){
+   const dayNum=i-start+1;
+   let d, muted=false;
+   if(dayNum<1){d=new Date(y,m-1,prevDays+dayNum);muted=true}
+   else if(dayNum>days){d=new Date(y,m+1,dayNum-days);muted=true}
+   else d=new Date(y,m,dayNum);
+   const key=localDateKey(d);
+   const ts=data.tasks.filter(t=>t.date===key);
+   const isToday=key===localDateKey(new Date()), isSel=key===selectedDate;
+   cells+=`<div class="cal-day ${muted?'muted':''} ${isToday?'today':''} ${isSel?'selected':''}" onclick="selectCalendarDay('${key}')">
+      <div class="cal-num">${d.getDate()}</div>
+      <div class="cal-dots">${ts.slice(0,6).map(t=>`<span class="dot ${t.done?'done':'pending'}"></span>`).join('')}</div>
+   </div>`;
+ }
+ document.getElementById('calendarGrid').innerHTML=cells;
+}
+function selectCalendarDay(key){selectedDate=key;calendarDate=parseDate(key);render()}
+
+function renderHistory(){
+ const dates=[...new Set(data.tasks.map(t=>t.date))].sort().reverse().slice(0,14);
+ const el=document.getElementById('historyList');
+ el.innerHTML=dates.length?dates.map(d=>`<button onclick="selectedDate='${d}';render()">${shortDate(d)} · ${data.tasks.filter(t=>t.date===d&&t.done).length} feitas</button>`).join(''):'<span class="empty">O histórico aparecerá aqui.</span>';
+}
+function toggle(id){
+ const t=data.tasks.find(x=>x.id===id); if(!t)return;
+ if(t.done){t.done=false;t.doneAt='';t.observation='';save();render();return}
+ completingId=id;
+ document.getElementById('completeTaskName').textContent=t.name;
+ document.getElementById('observationInput').value='';
+ document.getElementById('completeModal').classList.add('show');
+ document.getElementById('observationInput').focus();
+}
+function closeComplete(){completingId=null;document.getElementById('completeModal').classList.remove('show')}
+function confirmComplete(){
+ const t=data.tasks.find(x=>x.id===completingId);if(!t)return;
+ t.done=true;t.doneAt=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+ t.observation=document.getElementById('observationInput').value.trim();
+ save();closeComplete();render();
+}
+function removeTask(id){if(confirm('Excluir esta tarefa?')){data.tasks=data.tasks.filter(t=>t.id!==id);save();render()}}
+function openAdd(){document.getElementById('modal').classList.add('show');document.getElementById('taskInput').focus()}
+function closeAdd(){document.getElementById('modal').classList.remove('show');document.getElementById('taskInput').value='';document.getElementById('timeInput').value='';document.getElementById('priorityInput').value=''}
+function addTask(){
+ const name=document.getElementById('taskInput').value.trim();if(!name)return;
+ data.tasks.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString(),name,date:selectedDate,time:document.getElementById('timeInput').value,priority:document.getElementById('priorityInput').value,done:false,carried:false});
+ save();closeAdd();render();
+}
+function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeAdd()});
+document.getElementById('completeModal').addEventListener('click',e=>{if(e.target.id==='completeModal')closeComplete()});
+document.getElementById('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});
+render();
+if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js")); }
+</script>
+</body>
+</html>
